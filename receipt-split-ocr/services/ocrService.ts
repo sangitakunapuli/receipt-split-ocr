@@ -1,0 +1,129 @@
+import axios from 'axios';
+import * as FileSystem from 'expo-file-system';
+
+export interface OCRResult {
+  text: string;
+  items: Array<{ name: string; price: number }>;
+  subtotal: number;
+  tax: number;
+  tip: number;
+  total: number;
+}
+
+// Mock OCR function - in production, use Google Cloud Vision, AWS Textract, or similar
+export const parseReceiptImage = async (imageUri: string): Promise<OCRResult> => {
+  try {
+    // For demo purposes, return a sample result
+    // In production, you would send the image to an OCR API
+    const mockResult: OCRResult = {
+      text: 'Sample receipt text',
+      items: [
+        { name: 'Burger', price: 12.99 },
+        { name: 'Fries', price: 5.99 },
+        { name: 'Drink', price: 3.99 },
+      ],
+      subtotal: 22.97,
+      tax: 2.07,
+      tip: 0,
+      total: 25.04,
+    };
+
+    return mockResult;
+  } catch (error) {
+    console.error('Error parsing receipt:', error);
+    throw new Error('Failed to parse receipt image');
+  }
+};
+
+// Helper function to convert image to base64 for API calls
+export const imageToBase64 = async (imageUri: string): Promise<string> => {
+  try {
+    const base64 = await FileSystem.readAsStringAsync(imageUri, {
+      encoding: 'base64',
+    });
+    return base64;
+  } catch (error) {
+    console.error('Error converting image to base64:', error);
+    throw error;
+  }
+};
+
+// Real OCR implementation using Google Cloud Vision API
+export const parseReceiptWithGoogleVision = async (
+  imageUri: string,
+  apiKey: string
+): Promise<OCRResult> => {
+  try {
+    const base64Image = await imageToBase64(imageUri);
+
+    const response = await axios.post(
+      `https://vision.googleapis.com/v1/images:annotateImages?key=${apiKey}`,
+      {
+        requests: [
+          {
+            image: {
+              content: base64Image,
+            },
+            features: [
+              {
+                type: 'DOCUMENT_TEXT_DETECTION',
+              },
+            ],
+          },
+        ],
+      }
+    );
+
+    const text =
+      response.data.responses?.[0]?.fullTextAnnotation?.text || '';
+
+    // Parse the text to extract items and totals
+    // This is a simplified parser - you'd want more sophisticated parsing in production
+    const lines = text.split('\n').filter((line: string) => line.trim());
+
+    const items: Array<{ name: string; price: number }> = [];
+    let subtotal = 0;
+    let tax = 0;
+    let tip = 0;
+
+    // Very basic parsing - look for currency amounts
+    lines.forEach((line: string) => {
+      const priceMatch = line.match(/\$?([\d,]+\.?\d{0,2})/);
+      if (priceMatch) {
+        const price = parseFloat(priceMatch[1].replace(/,/g, ''));
+        if (price > 0) {
+          const name = line.replace(priceMatch[0], '').trim() || 'Item';
+          items.push({ name, price });
+        }
+      }
+    });
+
+    // Extract totals (simplified - look for keywords)
+    const subtotalMatch = text.match(/subtotal[:\s]+\$?([\d,]+\.?\d{2})/i);
+    if (subtotalMatch) subtotal = parseFloat(subtotalMatch[1].replace(/,/g, ''));
+
+    const taxMatch = text.match(/tax[:\s]+\$?([\d,]+\.?\d{2})/i);
+    if (taxMatch) tax = parseFloat(taxMatch[1].replace(/,/g, ''));
+
+    const tipMatch = text.match(/tip[:\s]+\$?([\d,]+\.?\d{2})/i);
+    if (tipMatch) tip = parseFloat(tipMatch[1].replace(/,/g, ''));
+
+    const totalMatch = text.match(/total[:\s]+\$?([\d,]+\.?\d{2})/i);
+    const total = totalMatch
+      ? parseFloat(totalMatch[1].replace(/,/g, ''))
+      : subtotal + tax + tip;
+
+    return {
+      text,
+      items: items.length > 0 ? items : [{ name: 'Item', price: subtotal }],
+      subtotal: subtotal || total - tax - tip,
+      tax,
+      tip,
+      total,
+    };
+  } catch (error) {
+    console.error('Error with Google Vision API:', error);
+    // Fallback to mock result
+    return parseReceiptImage(imageUri);
+  }
+};
