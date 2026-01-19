@@ -6,9 +6,11 @@ import {
   Text,
   ScrollView,
 } from 'react-native';
+import { useRouter } from 'expo-router';
 import { useReceiptContext } from '@/contexts/ReceiptContext';
 
-export default function SettlementScreen({ navigation }: any) {
+export default function SettlementScreen() {
+  const router = useRouter();
   const { receipt, groupMembers, calculateSettlements } = useReceiptContext();
   const settlements = calculateSettlements();
 
@@ -17,7 +19,7 @@ export default function SettlementScreen({ navigation }: any) {
   };
 
   const handleReset = () => {
-    navigation.navigate('upload');
+    router.push('/(tabs)');
   };
 
   return (
@@ -105,7 +107,7 @@ export default function SettlementScreen({ navigation }: any) {
       <View style={styles.buttonContainer}>
         <TouchableOpacity
           style={styles.secondaryButton}
-          onPress={() => navigation.navigate('assign-items')}
+          onPress={() => router.back()}
         >
           <Text style={styles.secondaryButtonText}>← Back</Text>
         </TouchableOpacity>

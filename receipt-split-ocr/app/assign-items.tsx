@@ -7,10 +7,12 @@ import {
   ScrollView,
   FlatList,
 } from 'react-native';
+import { useRouter } from 'expo-router';
 import { useReceiptContext } from '@/contexts/ReceiptContext';
 import { ReceiptItem } from '@/types';
 
-export default function AssignItemsScreen({ navigation }: any) {
+export default function AssignItemsScreen() {
+  const router = useRouter();
   const { receipt, groupMembers, updateReceiptItems } = useReceiptContext();
   const [selectedItemId, setSelectedItemId] = useState<string | null>(
     receipt?.items[0]?.id || null
@@ -40,7 +42,7 @@ export default function AssignItemsScreen({ navigation }: any) {
 
   const handleNext = () => {
     updateReceiptItems(items);
-    navigation.navigate('settlement');
+    router.push('/settlement');
   };
 
   return (

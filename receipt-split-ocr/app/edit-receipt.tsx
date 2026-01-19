@@ -8,10 +8,12 @@ import {
   TextInput,
   Alert,
 } from 'react-native';
+import { useRouter } from 'expo-router';
 import { useReceiptContext } from '@/contexts/ReceiptContext';
 import { ReceiptItem } from '@/types';
 
-export default function EditReceiptScreen({ navigation }: any) {
+export default function EditReceiptScreen() {
+  const router = useRouter();
   const { receipt, updateReceiptItems, updateReceiptTotals } =
     useReceiptContext();
   const [subtotal, setSubtotal] = useState(receipt?.subtotal?.toString() || '0');
@@ -57,7 +59,7 @@ export default function EditReceiptScreen({ navigation }: any) {
 
     updateReceiptItems(items);
     updateReceiptTotals(subtotalNum, taxNum, tipNum);
-    navigation.navigate('assign-items');
+    router.push('/assign-items');
   };
 
   return (

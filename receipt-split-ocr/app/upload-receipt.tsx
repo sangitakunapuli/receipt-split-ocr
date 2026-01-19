@@ -10,11 +10,18 @@ import {
   Alert,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import { useRouter } from 'expo-router';
 import { useReceiptContext } from '@/contexts/ReceiptContext';
-import { parseReceiptImage } from '@/services/ocrService';
+import { parseReceiptWithGoogleVision } from '@/services/ocrService';
 import { Receipt } from '@/types';
+import Config from 'react-native-config';
 
-export default function UploadReceiptScreen({ navigation }: any) {
+
+// From https://console.cloud.google.com/
+const GOOGLE_VISION_API_KEY = "";
+
+export default function UploadReceiptScreen() {
+  const router = useRouter();
   const { addGroupMember, groupMembers, setReceipt } = useReceiptContext();
   const [newMemberName, setNewMemberName] = useState('');
   const [loading, setLoading] = useState(false);
@@ -58,7 +65,7 @@ export default function UploadReceiptScreen({ navigation }: any) {
 
     setLoading(true);
     try {
-      const ocrResult = await parseReceiptImage(selectedImage);
+      const ocrResult = await parseReceiptWithGoogleVision(selectedImage, GOOGLE_VISION_API_KEY);
 
       const newReceipt: Receipt = {
         id: Date.now().toString(),
@@ -77,7 +84,7 @@ export default function UploadReceiptScreen({ navigation }: any) {
       };
 
       setReceipt(newReceipt);
-      navigation.navigate('edit-receipt');
+      router.push('/edit-receipt');
     } catch (error) {
       Alert.alert('Error', 'Failed to process receipt. Please try again.');
       console.error(error);

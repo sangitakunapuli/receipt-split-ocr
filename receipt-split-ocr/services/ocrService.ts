@@ -1,5 +1,5 @@
 import axios from 'axios';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 
 export interface OCRResult {
   text: string;
@@ -48,16 +48,18 @@ export const imageToBase64 = async (imageUri: string): Promise<string> => {
   }
 };
 
-// Real OCR implementation using Google Cloud Vision API
+// Real OCR implementation using Google Cloud Vision API with API key
+// This follows the official Google Cloud Vision documentation:
+// https://docs.cloud.google.com/vision/docs/ocr#detect_text_in_a_local_image
 export const parseReceiptWithGoogleVision = async (
   imageUri: string,
-  apiKey: string
+  apiKey: string,
 ): Promise<OCRResult> => {
   try {
     const base64Image = await imageToBase64(imageUri);
 
     const response = await axios.post(
-      `https://vision.googleapis.com/v1/images:annotateImages?key=${apiKey}`,
+      `https://vision.googleapis.com/v1/images:annotate?key=${apiKey}`,
       {
         requests: [
           {
@@ -71,6 +73,12 @@ export const parseReceiptWithGoogleVision = async (
             ],
           },
         ],
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json; charset=utf-8',
+        },
+        timeout: 30000, // 30 second timeout
       }
     );
 
@@ -122,8 +130,10 @@ export const parseReceiptWithGoogleVision = async (
       total,
     };
   } catch (error) {
-    console.error('Error with Google Vision API:', error);
+    console.error('Error with Google Cloud Vision API:', error);
     // Fallback to mock result
     return parseReceiptImage(imageUri);
   }
 };
+
+
