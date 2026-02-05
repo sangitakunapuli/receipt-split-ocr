@@ -14,11 +14,6 @@ import { useRouter } from 'expo-router';
 import { useReceiptContext } from '@/contexts/ReceiptContext';
 import { parseReceiptWithGoogleVision } from '@/services/ocrService';
 import { Receipt } from '@/types';
-import Config from 'react-native-config';
-
-
-// From https://console.cloud.google.com/
-const GOOGLE_VISION_API_KEY = "";
 
 export default function UploadReceiptScreen() {
   const router = useRouter();
@@ -65,7 +60,8 @@ export default function UploadReceiptScreen() {
 
     setLoading(true);
     try {
-      const ocrResult = await parseReceiptWithGoogleVision(selectedImage, GOOGLE_VISION_API_KEY);
+      // Call Google Cloud Vision API with API key from .env
+      const ocrResult = await parseReceiptWithGoogleVision(selectedImage);
 
       const newReceipt: Receipt = {
         id: Date.now().toString(),

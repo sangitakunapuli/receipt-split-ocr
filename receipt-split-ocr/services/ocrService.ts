@@ -48,18 +48,25 @@ export const imageToBase64 = async (imageUri: string): Promise<string> => {
   }
 };
 
-// Real OCR implementation using Google Cloud Vision API with API key
-// This follows the official Google Cloud Vision documentation:
-// https://docs.cloud.google.com/vision/docs/ocr#detect_text_in_a_local_image
+// Real OCR implementation using Google Cloud Vision REST API
+// API key is stored in .env.local
 export const parseReceiptWithGoogleVision = async (
   imageUri: string,
-  apiKey: string,
+  apiKey?: string,
 ): Promise<OCRResult> => {
   try {
+    // Use provided API key or get from environment
+    const key = apiKey || process.env.EXPO_PUBLIC_GOOGLE_VISION_API_KEY;
+    
+    if (!key) {
+      console.warn('No API key provided, using mock data');
+      return parseReceiptImage(imageUri);
+    }
+
     const base64Image = await imageToBase64(imageUri);
 
     const response = await axios.post(
-      `https://vision.googleapis.com/v1/images:annotate?key=${apiKey}`,
+      `https://vision.googleapis.com/v1/images:annotate?key=${key}`,
       {
         requests: [
           {
@@ -78,33 +85,76 @@ export const parseReceiptWithGoogleVision = async (
         headers: {
           'Content-Type': 'application/json; charset=utf-8',
         },
-        timeout: 30000, // 30 second timeout
+        timeout: 30000,
       }
     );
 
     const text =
       response.data.responses?.[0]?.fullTextAnnotation?.text || '';
 
+    console.log('OCR Full Text:', text);
     // Parse the text to extract items and totals
-    // This is a simplified parser - you'd want more sophisticated parsing in production
     const lines = text.split('\n').filter((line: string) => line.trim());
 
     const items: Array<{ name: string; price: number }> = [];
+
+
+    // for (let i = 0; i < lines.length; i++) {
+    //     const line = lines[i];
+    //     const priceMatch = line.match(/\$?([\d,]+\.\d{0,2})/);
+    //     if (priceMatch) {
+    //         const price = parseFloat(priceMatch[1].replace(/,/g, ''));
+    //         if (price > 0) {
+    //             const name = lines[i-1] ? lines[i-1].trim() : 'Item';
+    //             // const name = lines[i-1].replace(lines[i-1], '').trim() || 'Item';
+    //             items.push({ name, price });
+    //         }
+    //   }
+    // }
+
+
     let subtotal = 0;
     let tax = 0;
     let tip = 0;
 
-    // Very basic parsing - look for currency amounts
-    lines.forEach((line: string) => {
-      const priceMatch = line.match(/\$?([\d,]+\.?\d{0,2})/);
+    // Parse items - handle both same-line and separate-line price formats
+    let i = 0;
+    while (i < lines.length) {
+      const line = lines[i];
+      const priceMatch = line.match(/\$?([\d,]+\.\d{0,2})/);
+
       if (priceMatch) {
+        // Price is on the same line as item name
         const price = parseFloat(priceMatch[1].replace(/,/g, ''));
         if (price > 0) {
           const name = line.replace(priceMatch[0], '').trim() || 'Item';
           items.push({ name, price });
         }
+        i++;
+      } else if (i + 1 < lines.length) {
+        // Check if next line has a price (price on separate line)
+        const nextLine = lines[i + 1];
+        const nextPriceMatch = nextLine.match(/^\$?([\d,]+\.\d{0,2})$/);
+
+        if (nextPriceMatch) {
+          // Next line is just a price
+          const price = parseFloat(nextPriceMatch[1].replace(/,/g, ''));
+          if (price > 0) {
+            const name = line.trim() || 'Item';
+            items.push({ name, price });
+            i += 2; // Skip both the name line and price line
+          } else {
+            i++;
+          }
+        } else {
+          i++;
+        }
+      } else {
+        i++;
       }
-    });
+    }
+
+    console.log('OCR Text:', items);
 
     // Extract totals (simplified - look for keywords)
     const subtotalMatch = text.match(/subtotal[:\s]+\$?([\d,]+\.?\d{2})/i);
@@ -135,5 +185,4 @@ export const parseReceiptWithGoogleVision = async (
     return parseReceiptImage(imageUri);
   }
 };
-
 
