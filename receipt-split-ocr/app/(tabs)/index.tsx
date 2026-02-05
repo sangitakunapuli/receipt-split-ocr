@@ -2,7 +2,6 @@ import { Image } from 'expo-image';
 import { Platform, StyleSheet, TouchableOpacity, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 
-import { HelloWave } from '@/components/hello-wave';
 import ParallaxScrollView from '@/components/parallax-scroll-view';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -15,13 +14,12 @@ export default function HomeScreen() {
       headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
       headerImage={
         <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
+          source={require('@/assets/images/home_screen.jpeg')}
+          style={styles.titleImg}
         />
       }>
       <ThemedView style={styles.titleContainer}>
         <ThemedText type="title">Receipt Splitter</ThemedText>
-        <HelloWave />
       </ThemedView>
 
       <ThemedView style={styles.descriptionContainer}>
@@ -34,7 +32,7 @@ export default function HomeScreen() {
         style={styles.primaryButton}
         onPress={() => router.push('/upload-receipt')}
       >
-        <Text style={styles.primaryButtonText}>📸 Start New Receipt</Text>
+        <Text style={styles.primaryButtonText}>Start New Receipt</Text>
       </TouchableOpacity>
 
       <ThemedView style={styles.stepsContainer}>
@@ -95,7 +93,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   primaryButton: {
-    backgroundColor: '#34C759',
+    backgroundColor: '#805353ff',
     paddingVertical: 14,
     paddingHorizontal: 20,
     borderRadius: 10,
@@ -115,19 +113,20 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingHorizontal: 12,
     paddingVertical: 12,
-    backgroundColor: '#f5f5f5',
+    // backgroundColor: '#f5f5f5',
     borderRadius: 8,
   },
   stepNumber: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#007AFF',
+    backgroundColor: '#805353ff',
     color: 'white',
     textAlign: 'center',
     textAlignVertical: 'center',
     fontWeight: 'bold',
     fontSize: 16,
+    paddingTop: 6,
   },
   stepContent: {
     flex: 1,
@@ -137,9 +136,9 @@ const styles = StyleSheet.create({
     opacity: 0.7,
     marginTop: 2,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
+  titleImg: {
+    height: 300,
+    width: 500,
     bottom: 0,
     left: 0,
     position: 'absolute',

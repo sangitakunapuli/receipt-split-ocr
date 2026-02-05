@@ -33,6 +33,13 @@
     "plugins": [
       "expo-router",
       [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow receipt-split-ocr to access your photos",
+          "cameraPermission": "Allow receipt-split-ocr to access your camera"
+        }
+      ],
+      [
         "expo-splash-screen",
         {
           "image": "./assets/images/splash-icon.png",

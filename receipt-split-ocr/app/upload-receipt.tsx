@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   StyleSheet,
@@ -21,6 +21,23 @@ export default function UploadReceiptScreen() {
   const [newMemberName, setNewMemberName] = useState('');
   const [loading, setLoading] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+
+  // Request camera and photo library permissions on component mount
+  useEffect(() => {
+    const requestPermissions = async () => {
+      const cameraStatus = await ImagePicker.requestCameraPermissionsAsync();
+      const libraryStatus = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      
+      if (cameraStatus.status !== 'granted') {
+        console.warn('Camera permission not granted');
+      }
+      if (libraryStatus.status !== 'granted') {
+        console.warn('Photo library permission not granted');
+      }
+    };
+
+    requestPermissions();
+  }, []);
 
   const handlePickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -101,13 +118,14 @@ export default function UploadReceiptScreen() {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Step 1: Create Group</Text>
         <Text style={styles.description}>
-          Add the people who will share this receipt
+          Add all individuals who shared items onthe receipt
         </Text>
 
         <View style={styles.inputContainer}>
           <TextInput
             style={styles.input}
-            placeholder="Enter member name"
+            placeholder="Enter name"
+            placeholderTextColor="#999"
             value={newMemberName}
             onChangeText={setNewMemberName}
             onSubmitEditing={handleAddMember}
@@ -137,13 +155,13 @@ export default function UploadReceiptScreen() {
             style={[styles.button, styles.flex1]}
             onPress={handleCameraCapture}
           >
-            <Text style={styles.buttonText}>📷 Camera</Text>
+            <Text style={styles.buttonText}>Take Photo</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.button, styles.flex1, styles.marginLeft]}
             onPress={handlePickImage}
           >
-            <Text style={styles.buttonText}>🖼️ Gallery</Text>
+            <Text style={styles.buttonText}>Upload Image</Text>
           </TouchableOpacity>
         </View>
 
@@ -187,6 +205,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+    marginTop: 50,
   },
   sectionTitle: {
     fontSize: 18,
