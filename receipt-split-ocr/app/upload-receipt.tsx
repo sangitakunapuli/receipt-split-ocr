@@ -17,7 +17,7 @@ import { Receipt } from '@/types';
 
 export default function UploadReceiptScreen() {
   const router = useRouter();
-  const { addGroupMember, groupMembers, setReceipt } = useReceiptContext();
+  const { addGroupMember, removeGroupMember, groupMembers, setReceipt } = useReceiptContext();
   const [newMemberName, setNewMemberName] = useState('');
   const [loading, setLoading] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -118,7 +118,7 @@ export default function UploadReceiptScreen() {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Step 1: Create Group</Text>
         <Text style={styles.description}>
-          Add all individuals who shared items onthe receipt
+          Add all individuals in your group
         </Text>
 
         <View style={styles.inputContainer}>
@@ -139,6 +139,9 @@ export default function UploadReceiptScreen() {
           {groupMembers.map((member) => (
             <View key={member.id} style={styles.memberItem}>
               <Text style={styles.memberName}>{member.name}</Text>
+              <TouchableOpacity style={styles.removalButton} onPress={() => removeGroupMember(member.id)}>
+                <Text style={styles.buttonText}>X</Text>
+              </TouchableOpacity>
             </View>
           ))}
         </View>
@@ -258,6 +261,10 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   memberItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+
     backgroundColor: '#f0f0f0',
     padding: 12,
     borderRadius: 8,
@@ -268,7 +275,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
     color: '#333',
+    flex: 1,
   },
+
   successText: {
     color: '#34C759',
     fontWeight: 'bold',
@@ -290,5 +299,13 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  removalButton: {
+    width: 24,
+    height: 24,
+    borderRadius: 6,
+    backgroundColor: '#eb5757ff',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
